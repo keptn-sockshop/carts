@@ -15,18 +15,21 @@ public class VersionController {
    @Value("${promotionRate}")
    private String promotionRate;
 
-   private String template = "<html><head><style>html,body{width:100%%;padding:0;margin:0}.centered-wrapper{position:relative;text-align:center;margin-top:20px}.centered-content{display:inline-block;vertical-align:top}</style></head><body class=\"centered-wrapper\"><div class=\"centered-content\">"+
+  // limegreen for V1 and V2 90EE90
+  // red for V2 DC143C
+
+   private String template = "<html><head><style>html,body{width:100%%;padding:0;margin:0;background-color:#90EE90;}.centered-wrapper{position:relative;text-align:center;margin-top:20px}.centered-content{display:inline-block;vertical-align:top}</style></head><body class=\"centered-wrapper\"><div class=\"centered-content\">"+
       "<table style=\"font-family:sans-serif;font-size:16\" cellspacing=\"5\"><tbody>" +
       "<tr><td rowspan=\"9\" width=\"150\"><img src=\"https://raw.githubusercontent.com/keptn-sockshop/carts/master/cart.png\" width=\"150\"></td>"+
-      "<td align=\"right\" style=\"color:silver\">Pod name:</td><td>%s</td></tr>"+ //name
-      "<tr><td align=\"right\" style=\"color:silver\">Container image:</td><td>%s</td></tr>"+ //image
-      "<tr><td align=\"right\" style=\"color:silver\">Deployment name:</td><td>%s</td></tr>"+ //deployment
-      "<tr><td align=\"right\" style=\"color:silver\">keptn project:</td><td>%s</td></tr>"+ //keptnProject
-      "<tr><td align=\"right\" style=\"color:silver\">keptn stage:</td><td>%s</td></tr>"+ //keptnStage
-      "<tr><td align=\"right\" style=\"color:silver\">keptn service:</td><td>%s</td></tr>"+ //keptnService
-      "<tr><td align=\"right\" style=\"color:silver\">Version:</td><td>%s</td></tr>"+ //version
-      "<tr><td align=\"right\" style=\"color:silver\">Delay in ms:</td><td>%s</td></tr>"+ //delayInMillis
-      "<tr><td align=\"right\" style=\"color:silver\">Promotion rate:</td><td>%s</td></tr>"+ //promotionRate
+      "<td align=\"right\">Pod name:</td><td><strong>%s</strong></td></tr>"+ //name
+      "<tr><td align=\"right\">Container image:</td><td><strong>%s</strong></td></tr>"+ //image
+      "<tr><td align=\"right\">Deployment name:</td><td><strong>%s</strong></td></tr>"+ //deployment
+      "<tr><td align=\"right\">keptn project:</td><td><strong>%s</strong></td></tr>"+ //keptnProject
+      "<tr><td align=\"right\">keptn stage:</td><td><strong>%s</strong></td></tr>"+ //keptnStage
+      "<tr><td align=\"right\">keptn service:</td><td><strong>%s</strong></td></tr>"+ //keptnService
+      "<tr><td align=\"right\">Version:</td><td><strong>%s</strong></td></tr>"+ //version
+      "<tr><td align=\"right\">Delay in ms:</td><td><strong>%s</strong></td></tr>"+ //delayInMillis
+      "<tr><td align=\"right\">Promotion rate:</td><td><strong>%s</strong></td></tr>"+ //promotionRate
       "</tbody></table></div></body></html>";
 
    @ResponseStatus(HttpStatus.OK)
