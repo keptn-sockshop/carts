@@ -22,23 +22,23 @@ public class RequestCounterInterceptor implements HandlerInterceptor {
 
 	@Override
 	public boolean preHandle(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final Object o) throws Exception {
-		return false;
+		System.out.println("Pre Handle method is Calling");
+		return true;
 	}
 
 	@Override
 	public void postHandle(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final Object o, final ModelAndView modelAndView) throws Exception {
-
+		System.out.println("Post Handle method is Calling");
 	}
 
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) throws Exception {
 		String handlerLabel = handler.toString();
-    System.out.println("request interceptor");
 		if (handler instanceof HandlerMethod) {
 			Method method = ((HandlerMethod) handler).getMethod();
 			handlerLabel = method.getDeclaringClass().getSimpleName() + "." + method.getName();
 		}
-
+		System.out.println("Request and Response is completed");
 		requestTotal.labels(request.getMethod(), handlerLabel, Integer.toString(response.getStatus())).inc();
 	}
 }
