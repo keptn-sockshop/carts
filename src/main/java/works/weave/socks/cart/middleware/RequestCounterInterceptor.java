@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import io.prometheus.client.Summary;
+import io.prometheus.client.Histogram;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -23,7 +23,7 @@ public class RequestCounterInterceptor implements HandlerInterceptor {
 			.labelNames("method", "handler", "status")
 			.help("Http Request Total").register();
 
-    private static final Summary responseTimeInMs = Summary
+    private static final Histogram responseTimeInMs = Histogram
             .build()
             .name("http_response_time_milliseconds")
             .labelNames("method", "handler", "status")
