@@ -60,6 +60,8 @@ public class ItemsController {
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
             .help("Request latency in seconds.").register();
 
+    
+
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/{itemId:.*}", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public Item get(@PathVariable String customerId, @PathVariable String itemId) {
