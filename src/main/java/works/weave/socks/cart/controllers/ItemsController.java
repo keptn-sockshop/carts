@@ -51,8 +51,10 @@ public class ItemsController {
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
 
-    public static final String FAULTY_ITEM_ID = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
-    public static final Integer MAX_JOBCOUNT = 2;
+    public static final String FAULTY_ITEM_ID   = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
+    public static final String SLOW_ITEM_ID     = "03fef6ac-1896-4ce8-bd69-b798f86c6fac";
+    public static final Integer SLOW_ITEM_SLEEP = 2000;
+    public static final Integer MAX_JOBCOUNT    = 2;
 
     static final Counter requests = Counter.build().name("requests_total").help("Total number of requests.").register();
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
@@ -93,6 +95,12 @@ public class ItemsController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public List<Item> getItems(@PathVariable String customerId) {
+        try {
+            int millis = Integer.parseInt(this.delayInMillis.trim());
+            Thread.sleep(millis);
+        } catch (Throwable e) {
+            // don't do anything
+        }
         return cartsController.get(customerId).contents();
     }
 
@@ -129,7 +137,7 @@ public class ItemsController {
                 return item;
             } else {
                 Item newItem = new Item(foundItem.get(), foundItem.get().quantity() + 1);
-                System.out.println("found item id: " + newItem.getItemId());
+                //System.out.println("found item id: " + newItem.getItemId());
                 if (newItem.getItemId().equals(FAULTY_ITEM_ID)) {
                     System.out.println("special item found - do some calculation to increase CPU load");
                     int jobCount = 0;
@@ -149,7 +157,13 @@ public class ItemsController {
                         }
                         jobCount++;
                     }
-
+                }
+                else if (newItem.getItemId().equals(SLOW_ITEM_ID)) {
+                    try {
+                        Thread.sleep(SLOW_ITEM_SLEEP);
+                    } catch (Throwable e) {
+                        // don't do anything
+                    }
                 }
                 LOG.debug("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
                 updateItem(customerId, newItem);
