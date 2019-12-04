@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import works.weave.socks.cart.cart.CartDAO;
 import works.weave.socks.cart.cart.CartResource;
+import works.weave.socks.cart.entities.Cart;
 import works.weave.socks.cart.entities.Item;
 import works.weave.socks.cart.item.FoundItem;
 import works.weave.socks.cart.item.ItemDAO;
@@ -30,6 +31,10 @@ import io.prometheus.client.spring.boot.EnablePrometheusEndpoint;
 import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
+
+import no.finn.unleash.Unleash;
+import no.finn.unleash.DefaultUnleash;
+import no.finn.unleash.util.UnleashConfig;
 
 @RestController
 @RequestMapping(value = "/carts/{customerId:.*}/items")
@@ -60,7 +65,19 @@ public class ItemsController {
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
             .help("Request latency in seconds.").register();
 
-    
+    static final UnleashConfig config = UnleashConfig.builder()
+    .appName("Carts")
+    .instanceId("instance x")
+    .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
+    .build();
+    static Unleash unleash = null;
+
+    public Unleash getUnleash() {
+        if (unleash == null) {
+            unleash = new DefaultUnleash(config);
+        }
+        return unleash;
+    }
 
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/{itemId:.*}", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
@@ -101,7 +118,28 @@ public class ItemsController {
         } catch (Throwable e) {
             // don't do anything
         }
-        return cartsController.get(customerId).contents();
+
+        if(getUnleash().isEnabled("EnableItemCache")) {
+            LOG.debug("using carts cache");
+            // return cached items
+            Cart cart = new Cart();
+            cart.customerId = customerId;
+            String id = "5d9e1acc5bd23600071eecea";
+            String itemId = "03fef6ac-1896-4ce8-bd69-b798f85c6e0b";
+            cart.add(new Item(id, itemId, 5, 99.99f));
+            return cart.contents();
+          } else {
+            LOG.debug("not using carts cache");
+            try {
+                Thread.sleep((long)(Math.random() * 100)+100);
+            } catch (Exception e) {
+                //TODO: handle exception
+            }
+            return cartsController.get(customerId).contents();
+          }
+
+
+        
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -123,6 +161,10 @@ public class ItemsController {
             }
 
             int promRate = Integer.parseInt(promotionRate);
+            // overwrite if promotionrate is set via feature toggle
+            if(getUnleash().isEnabled("EnablePromotion")) {
+                promRate = 30;
+            }
             if (promRate >= (Math.random() * 100)) {
                 throw new Exception("promotion campaign not yet implemented");
             }
