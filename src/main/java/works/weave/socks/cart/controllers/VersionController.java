@@ -15,10 +15,9 @@ public class VersionController {
    @Value("${promotionRate}")
    private String promotionRate;
 
-  // limegreen for V1 and V2 90EE90
-  // red for V2 DC143C
-
-   private String template = "<html><head><style>html,body{width:100%%;padding:0;margin:0;background-color:#90EE90;}.centered-wrapper{position:relative;text-align:center;margin-top:20px}.centered-content{display:inline-block;vertical-align:top}</style></head><body class=\"centered-wrapper\"><div class=\"centered-content\">"+
+   private String template = "<html><head>" + 
+      "<style>html,body{width:100%%;padding:0;margin:0;background-color:%s;}" + // backgroundColor
+      ".centered-wrapper{position:relative;text-align:center;margin-top:20px}.centered-content{display:inline-block;vertical-align:top}</style></head><body class=\"centered-wrapper\"><div class=\"centered-content\">"+
       "<table style=\"font-family:sans-serif;font-size:16\" cellspacing=\"5\"><tbody>" +
       "<tr><td rowspan=\"9\" width=\"150\"><img src=\"https://raw.githubusercontent.com/keptn-sockshop/carts/master/cart.png\" width=\"150\"></td>"+
       "<td align=\"right\">Pod name:</td><td><strong>%s</strong></td></tr>"+ //name
@@ -43,9 +42,20 @@ public class VersionController {
       String keptnStage = getEnvVarValueOrNotFoundMessage("KEPTN_STAGE");
       String keptnService = getEnvVarValueOrNotFoundMessage("KEPTN_SERVICE");
 
+      String backgroundColor = "#90EE90";
+
       if (version == null) {
          version = "No version found in application.properties";
       }
+      // determine background color
+      if (version == "v1") {
+         backgroundColor = "#90EE90"; // limegreen
+      } else if (version == "v2") {
+         backgroundColor = "#DC143C"; // red
+      } else {
+         backgroundColor = "#14DC85"; // some other green
+      }
+
       if (delayInMillis == null) {
          delayInMillis = "No delayInMillis found in application.properties";
       }
@@ -53,7 +63,7 @@ public class VersionController {
          promotionRate = "No promotionRate found in application.properties";
       }
 
-      return String.format(template, name, image, deployment, keptnProject, keptnStage, keptnService, version, delayInMillis, promotionRate);
+      return String.format(template, backgroundColor, name, image, deployment, keptnProject, keptnStage, keptnService, version, delayInMillis, promotionRate);
    }
 
    private String getEnvVarValueOrNotFoundMessage(String var) {
