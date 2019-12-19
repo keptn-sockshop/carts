@@ -18,7 +18,7 @@ jobs:
   include:
   - stage: feature/bug/hotfix/patch
     # build docker images for feature/bug/hotfix/patch branches
-    if: branch =~ ^feature.*$ OR branch =~ ^bug.*$ OR branch =~ ^hotfix.*$
+    if: branch =~ ^feature.*$ OR branch =~ ^bug.*$ OR branch =~ ^hotfix.*$ OR branch =~ ^patch.*$
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
     - TYPE="$(echo $TRAVIS_BRANCH | cut -d'/' -f1)"
