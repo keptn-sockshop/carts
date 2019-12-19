@@ -6,19 +6,19 @@ services:
 before_install:
 - export TZ=Europe/Vienna
 - IMAGE=keptnexamples/carts
-- REGISTRY_USER=dirkwallerstorfer
 - VERSION="$(cat version)"
 - DATE="$(date +'%Y%m%d.%H%M')"
 - GIT_SHA="$(git rev-parse --short HEAD)"
-- echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
 - REPO_URL="$(git remote get-url --all origin)"
 - LAST_COMMIT="$(git log -1 --oneline)"
 - ./writeManifest.sh
 - cat MANIFEST
 - mvn package
+
 jobs:
   include:
-  - stage: feature/bug
+  - stage: feature/bug/hotfix/patch
+    # build docker images for feature/bug/hotfix/patch branches
     if: branch =~ ^feature.*$ OR branch =~ ^bug.*$ OR branch =~ ^hotfix.*$
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
@@ -26,8 +26,11 @@ jobs:
     - NUMBER="$(echo $TRAVIS_BRANCH | cut -d'/' -f2)"
     - docker build . -t "${IMAGE}:${GIT_SHA}"
     - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}:${GIT_SHA}"
     - docker push "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
+
   - stage: develop
     if: branch = develop AND NOT type = pull_request
     script:
@@ -35,9 +38,10 @@ jobs:
     - docker build . -t "${IMAGE}:${GIT_SHA}"
     - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${DATE}"
     - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:latest"
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${DATE}"
-    - docker push "${IMAGE}:latest"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
+
   - stage: release-branch
     if: branch =~ ^release.*$ AND NOT type = pull_request
     script:
@@ -45,12 +49,15 @@ jobs:
     - docker build . -t "${IMAGE}:${GIT_SHA}"
     - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.${DATE}"
     - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.latest"
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${VERSION}.${DATE}"
-    - docker push "${IMAGE}:${VERSION}.latest"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
+
   - stage: master
     if: branch = master AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
     - docker build . -t "${IMAGE}:${VERSION}"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}:${VERSION}"
