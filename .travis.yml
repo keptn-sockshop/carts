@@ -13,6 +13,8 @@ before_install:
 - LAST_COMMIT="$(git log -1 --oneline)"
 - ./writeManifest.sh
 - cat MANIFEST
+- export IMAGE
+- export GIT_SHA
 
 jobs:
   include:
