@@ -13,7 +13,6 @@ before_install:
 - LAST_COMMIT="$(git log -1 --oneline)"
 - ./writeManifest.sh
 - cat MANIFEST
-- mvn package
 
 jobs:
   include:
@@ -24,20 +23,25 @@ jobs:
     - echo $TRAVIS_BUILD_STAGE_NAME
     - TYPE="$(echo $TRAVIS_BRANCH | cut -d'/' -f1)"
     - NUMBER="$(echo $TRAVIS_BRANCH | cut -d'/' -f2)"
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
+    - docker push "${IMAGE}"
 
   - stage: develop
     if: branch = develop AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${DATE}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:latest"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${DATE}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:latest.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:latest.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:latest.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}"
@@ -46,9 +50,13 @@ jobs:
     if: branch =~ ^release.*$ AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.${DATE}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.latest"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.${DATE}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.latest.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.latest.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.latest.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}"
@@ -57,7 +65,10 @@ jobs:
     if: branch = master AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${VERSION}"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
-    - docker push "${IMAGE}:${VERSION}"
+    - docker push "${IMAGE}"
