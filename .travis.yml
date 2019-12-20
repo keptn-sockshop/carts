@@ -6,51 +6,71 @@ services:
 before_install:
 - export TZ=Europe/Vienna
 - IMAGE=keptnexamples/carts
-- REGISTRY_USER=dirkwallerstorfer
 - VERSION="$(cat version)"
 - DATE="$(date +'%Y%m%d.%H%M')"
 - GIT_SHA="$(git rev-parse --short HEAD)"
-- echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
 - REPO_URL="$(git remote get-url --all origin)"
 - LAST_COMMIT="$(git log -1 --oneline)"
 - ./writeManifest.sh
 - cat MANIFEST
-- mvn package
+- export IMAGE
+- export GIT_SHA
+
 jobs:
   include:
-  - stage: feature/bug
-    if: branch =~ ^feature.*$ OR branch =~ ^bug.*$ OR branch =~ ^hotfix.*$
+  - stage: feature/bug/hotfix/patch
+    # build docker images for feature/bug/hotfix/patch branches
+    if: branch =~ ^feature.*$ OR branch =~ ^bug.*$ OR branch =~ ^hotfix.*$ OR branch =~ ^patch.*$
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
     - TYPE="$(echo $TRAVIS_BRANCH | cut -d'/' -f1)"
     - NUMBER="$(echo $TRAVIS_BRANCH | cut -d'/' -f2)"
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${TYPE}.${NUMBER}.${DATE}"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${TYPE}.${NUMBER}.${DATE}.3"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
+
   - stage: develop
     if: branch = develop AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${DATE}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:latest"
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${DATE}"
-    - docker push "${IMAGE}:latest"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${DATE}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:latest.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:latest.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:latest.3"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
+
   - stage: release-branch
     if: branch =~ ^release.*$ AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${GIT_SHA}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.${DATE}"
-    - docker tag "${IMAGE}:${GIT_SHA}" "${IMAGE}:${VERSION}.latest"
-    - docker push "${IMAGE}:${GIT_SHA}"
-    - docker push "${IMAGE}:${VERSION}.${DATE}"
-    - docker push "${IMAGE}:${VERSION}.latest"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.${DATE}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.latest.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.latest.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.latest.3"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
+
   - stage: master
     if: branch = master AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - docker build . -t "${IMAGE}:${VERSION}"
-    - docker push "${IMAGE}:${VERSION}"
+    - ./build_multiple_versions.sh
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.3"
+    after_success:
+    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
+    - docker push "${IMAGE}"
