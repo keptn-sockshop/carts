@@ -4,8 +4,8 @@
 PROPERTIES_FILE=src/main/resources/application.properties
 
 replaceProperties() {
-    delayInMillis=$1
-    version=$2
+    version=$1
+    delayInMillis=$2
     promotionRate=$3
 
     sed -i "s/\(delayInMillis=\).*\$/\1${delayInMillis}/" $PROPERTIES_FILE
