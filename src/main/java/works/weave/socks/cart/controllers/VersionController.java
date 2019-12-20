@@ -48,9 +48,9 @@ public class VersionController {
          version = "No version found in application.properties";
       }
       // determine background color
-      if (version == "v1") {
+      if (version.equals("v1")) {
          backgroundColor = "#90EE90"; // limegreen
-      } else if (version == "v2") {
+      } else if (version.equals("v2")) {
          backgroundColor = "#DC143C"; // red
       } else {
          backgroundColor = "#14DC85"; // some other green
