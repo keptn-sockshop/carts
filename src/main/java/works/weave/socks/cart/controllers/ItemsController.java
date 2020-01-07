@@ -69,7 +69,7 @@ public class ItemsController {
     static Unleash unleash = null;
 
     public Unleash getUnleash() {
-        if (unleash == null && System.getenv("UNLEASH_SERVER_URL")) {
+        if (unleash == null && System.getenv("UNLEASH_SERVER_URL") != null) {
             unleashConfig = UnleashConfig.builder()
                     .appName("Carts")
                     .instanceId("instance x")
