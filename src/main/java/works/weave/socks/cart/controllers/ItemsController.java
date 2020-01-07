@@ -65,16 +65,17 @@ public class ItemsController {
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
             .help("Request latency in seconds.").register();
 
-    static final UnleashConfig config = UnleashConfig.builder()
-    .appName("Carts")
-    .instanceId("instance x")
-    .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
-    .build();
+    static final UnleashConfig unleashConfig = null;
     static Unleash unleash = null;
 
     public Unleash getUnleash() {
-        if (unleash == null) {
-            unleash = new DefaultUnleash(config);
+        if (unleash == null && System.getenv("UNLEASH_SERVER_URL")) {
+            unleashConfig = UnleashConfig.builder()
+                    .appName("Carts")
+                    .instanceId("instance x")
+                    .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
+                    .build();
+            unleash = new DefaultUnleash(unleashConfig);
         }
         return unleash;
     }
