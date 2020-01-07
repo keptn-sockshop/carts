@@ -4,6 +4,16 @@ Within this repository we provide the sourcecode for the carts microservice whic
 
 Please create all pull requests to the `master` branch.
 
+## Faulty Item in cart
+
+When adding an item to the cart, we simulate an algorithmic problem by exhausting the CPU with a loop.
+This can be done by sending a `POST` request with a faulty item id (`03fef6ac-1896-4ce8-bd69-b798f85c6e0f`) to `/carts/1/items`, e.g.:
+
+```
+curl -d '{"itemId": "03fef6ac-1896-4ce8-bd69-b798f85c6e0f", "unitPrice": "99.99"}' -H "Content-Type: application/json" -X POST http://carts.sockshop-production.$(kubectl get cm keptn-domain -n keptn -o=jsonpath='{.data.app_domain}')/carts/1/items
+```
+
+
 ## Different versions with slowdowns
 
 We provide docker images with various application properties set:
