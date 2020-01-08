@@ -82,15 +82,15 @@ public class ItemsController {
                         .subscriber(new UnleashSubscriber() {
                             @Override
                             public void onReady(UnleashReady ready) {
-                                LOG.info("Unleash is ready.");
+                                System.out.println("Unleash is ready.");
                             }
                             @Override
                             public void togglesFetched(FeatureToggleResponse toggleResponse) {
-                                LOG.info("Fetched toggles. Status: " + toggleResponse.getStatus());
+                                System.out.println("Fetched toggles. Status: " + toggleResponse.getStatus());
                             }
                             @Override
                             public void togglesBackedUp(ToggleCollection toggleCollection) {
-                                LOG.info("Backup stored.");
+                                System.out.println("Backup stored.");
                             }
                         })
                         .build();
@@ -143,7 +143,7 @@ public class ItemsController {
         }
 
         if(getUnleash().isEnabled("EnableItemCache")) {
-            LOG.info("using carts cache");
+            System.out.println("using carts cache");
             // return cached items
             Cart cart = new Cart();
             cart.customerId = customerId;
@@ -152,7 +152,7 @@ public class ItemsController {
             cart.add(new Item(id, itemId, 5, 99.99f));
             return cart.contents();
           } else {
-            LOG.info("not using carts cache");
+            System.out.println("not using carts cache");
             try {
                 Thread.sleep((long)(Math.random() * 100)+100);
             } catch (Exception e) {
@@ -197,7 +197,7 @@ public class ItemsController {
 
             if (!foundItem.hasItem()) {
                 Supplier<Item> newItem = new ItemResource(itemDAO, () -> item).create();
-                LOG.info("Did not find item. Creating item for user: " + customerId + ", " + newItem.get());
+                System.out.println("Did not find item. Creating item for user: " + customerId + ", " + newItem.get());
                 new CartResource(cartDAO, customerId).contents().get().add(newItem).run();
                 return item;
             } else {
@@ -230,7 +230,7 @@ public class ItemsController {
                         // don't do anything
                     }
                 }
-                LOG.info("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
+                System.out.println("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
                 updateItem(customerId, newItem);
                 return newItem;
             }
@@ -247,10 +247,10 @@ public class ItemsController {
         FoundItem foundItem = new FoundItem(() -> getItems(customerId), () -> new Item(itemId));
         Item item = foundItem.get();
 
-        LOG.info("Removing item from cart: " + item);
+        System.out.println("Removing item from cart: " + item);
         new CartResource(cartDAO, customerId).contents().get().delete(() -> item).run();
 
-        LOG.info("Removing item from repository: " + item);
+        System.out.println("Removing item from repository: " + item);
         new ItemResource(itemDAO, () -> item).destroy().run();
     }
 
@@ -259,7 +259,7 @@ public class ItemsController {
     public void updateItem(@PathVariable String customerId, @RequestBody Item item) {
         // Merge old and new items
         ItemResource itemResource = new ItemResource(itemDAO, () -> get(customerId, item.itemId()));
-        LOG.info("Merging item in cart for user: " + customerId + ", " + item);
+        System.out.println("Merging item in cart for user: " + customerId + ", " + item);
         itemResource.merge(item).run();
     }
 
