@@ -36,6 +36,10 @@ import no.finn.unleash.Unleash;
 import no.finn.unleash.DefaultUnleash;
 import no.finn.unleash.FakeUnleash;
 import no.finn.unleash.util.UnleashConfig;
+import no.finn.unleash.event.UnleashSubscriber;
+import no.finn.unleash.event.UnleashReady;
+import no.finn.unleash.repository.FeatureToggleResponse;
+import no.finn.unleash.repository.ToggleCollection;
 
 @RestController
 @RequestMapping(value = "/carts/{customerId:.*}/items")
@@ -74,6 +78,22 @@ public class ItemsController {
                     .appName("Carts")
                     .instanceId("instance x")
                     .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
+                    .subscriber(new UnleashSubscriber() {
+                        @Override
+                        public void onReady(UnleashReady ready) {
+                            LOG.debug("Unleash is ready.");
+                        }
+                        @Override
+                        public void togglesFetched(FeatureToggleResponse toggleResponse) {
+                            LOG.debug("Fetched toggles. Status: " + toggleResponse.getStatus());
+                        }
+
+                        @Override
+                        public void togglesBackedUp(ToggleCollection toggleCollection) {
+                            LOG.debug("Backup stored.");
+                        }
+
+                    })
                     .build();
             unleash = new DefaultUnleash(unleashConfig);
         } else {
