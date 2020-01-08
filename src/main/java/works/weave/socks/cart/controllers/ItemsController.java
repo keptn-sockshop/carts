@@ -84,7 +84,7 @@ public class ItemsController {
                 String keptnService = System.getenv("KEPTN_SERVICE");
                 
                 UnleashConfig unleashConfig = UnleashConfig.builder()
-                        .appName(keptnService + "." + keptnProject + "-" + keptnStage)
+                        .appName(keptnService + "." + keptnStage)
                         .instanceId(podName)
                         .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
                         .subscriber(new UnleashSubscriber() {
