@@ -143,15 +143,9 @@ public class ItemsController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public List<Item> getItems(@PathVariable String customerId) {
-        try {
-            int millis = Integer.parseInt(this.delayInMillis.trim());
-            Thread.sleep(millis);
-        } catch (Throwable e) {
-            // don't do anything
-        }
-
         if(getUnleash().isEnabled("EnableItemCache")) {
-            System.out.println("using carts cache");
+            // simulate item cache
+            System.out.println("using carts item cache");
             // return cached items
             Cart cart = new Cart();
             cart.customerId = customerId;
@@ -160,10 +154,12 @@ public class ItemsController {
             cart.add(new Item(id, itemId, 5, 99.99f));
             return cart.contents();
           } else {
-            System.out.println("not using carts cache");
+            System.out.println("not using carts item cache");
             try {
-                Thread.sleep((long)(Math.random() * 100)+100);
-            } catch (Exception e) {
+                // simulate slowdown
+                int millis = Integer.parseInt(this.delayInMillis.trim());
+                Thread.sleep(millis);
+            } catch (Throwable e) {
                 //TODO: handle exception
             }
             return cartsController.get(customerId).contents();
