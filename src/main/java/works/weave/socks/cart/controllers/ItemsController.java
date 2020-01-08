@@ -34,6 +34,7 @@ import io.prometheus.client.Histogram;
 
 import no.finn.unleash.Unleash;
 import no.finn.unleash.DefaultUnleash;
+import no.finn.unleash.FakeUnleash;
 import no.finn.unleash.util.UnleashConfig;
 
 @RestController
@@ -75,6 +76,8 @@ public class ItemsController {
                     .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
                     .build();
             unleash = new DefaultUnleash(unleashConfig);
+        } else {
+            unleash = new FakeUnleash();
         }
         return unleash;
     }
