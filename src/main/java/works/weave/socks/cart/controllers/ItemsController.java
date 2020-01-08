@@ -75,9 +75,17 @@ public class ItemsController {
     public Unleash getUnleash() {
         if (unleash == null) {
             if(System.getenv("UNLEASH_SERVER_URL") != null) {
+                String podName = System.getenv("POD_NAME");
+                String deployment = System.getenv("DEPLOYMENT_NAME");
+                String image = System.getenv("CONTAINER_IMAGE");
+
+                String keptnProject = System.getenv("KEPTN_PROJECT");
+                String keptnStage = System.getenv("KEPTN_STAGE");
+                String keptnService = System.getenv("KEPTN_SERVICE");
+                
                 UnleashConfig unleashConfig = UnleashConfig.builder()
-                        .appName("Carts")
-                        .instanceId("instance x")
+                        .appName(keptnService + "." + keptnProject + "-" + keptnStage)
+                        .instanceId(podName)
                         .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
                         .subscriber(new UnleashSubscriber() {
                             @Override
