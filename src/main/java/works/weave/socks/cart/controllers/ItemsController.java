@@ -73,31 +73,31 @@ public class ItemsController {
     static Unleash unleash = null;
 
     public Unleash getUnleash() {
-        if (unleash == null && System.getenv("UNLEASH_SERVER_URL") != null) {
-            UnleashConfig unleashConfig = UnleashConfig.builder()
-                    .appName("Carts")
-                    .instanceId("instance x")
-                    .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
-                    .subscriber(new UnleashSubscriber() {
-                        @Override
-                        public void onReady(UnleashReady ready) {
-                            LOG.debug("Unleash is ready.");
-                        }
-                        @Override
-                        public void togglesFetched(FeatureToggleResponse toggleResponse) {
-                            LOG.debug("Fetched toggles. Status: " + toggleResponse.getStatus());
-                        }
-
-                        @Override
-                        public void togglesBackedUp(ToggleCollection toggleCollection) {
-                            LOG.debug("Backup stored.");
-                        }
-
-                    })
-                    .build();
-            unleash = new DefaultUnleash(unleashConfig);
-        } else {
-            unleash = new FakeUnleash();
+        if (unleash == null) {
+            if(System.getenv("UNLEASH_SERVER_URL") != null) {
+                UnleashConfig unleashConfig = UnleashConfig.builder()
+                        .appName("Carts")
+                        .instanceId("instance x")
+                        .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
+                        .subscriber(new UnleashSubscriber() {
+                            @Override
+                            public void onReady(UnleashReady ready) {
+                                LOG.debug("Unleash is ready.");
+                            }
+                            @Override
+                            public void togglesFetched(FeatureToggleResponse toggleResponse) {
+                                LOG.debug("Fetched toggles. Status: " + toggleResponse.getStatus());
+                            }
+                            @Override
+                            public void togglesBackedUp(ToggleCollection toggleCollection) {
+                                LOG.debug("Backup stored.");
+                            }
+                        })
+                        .build();
+                unleash = new DefaultUnleash(unleashConfig);
+            } else {
+                unleash = new FakeUnleash();
+            }
         }
         return unleash;
     }
