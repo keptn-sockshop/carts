@@ -213,7 +213,7 @@ public class ItemsController {
                     while (jobCount < MAX_JOBCOUNT) {
                         long count = 0;
                         long max = 0;
-                        for (long i = 3; i <= 10000; i++) {
+                        for (long i = 3; i <= 20000; i++) {
                             boolean isPrime = true;
                             for (long j = 2; j <= i / 2 && isPrime; j++) {
                                 isPrime = i % j > 0;
