@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import works.weave.socks.cart.cart.CartDAO;
 import works.weave.socks.cart.cart.CartResource;
+import works.weave.socks.cart.entities.Cart;
 import works.weave.socks.cart.entities.Item;
 import works.weave.socks.cart.item.FoundItem;
 import works.weave.socks.cart.item.ItemDAO;
@@ -30,6 +31,15 @@ import io.prometheus.client.spring.boot.EnablePrometheusEndpoint;
 import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
+
+import no.finn.unleash.Unleash;
+import no.finn.unleash.DefaultUnleash;
+import no.finn.unleash.FakeUnleash;
+import no.finn.unleash.util.UnleashConfig;
+import no.finn.unleash.event.UnleashSubscriber;
+import no.finn.unleash.event.UnleashReady;
+import no.finn.unleash.repository.FeatureToggleResponse;
+import no.finn.unleash.repository.ToggleCollection;
 
 @RestController
 @RequestMapping(value = "/carts/{customerId:.*}/items")
@@ -51,14 +61,54 @@ public class ItemsController {
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
 
-    public static final String FAULTY_ITEM_ID = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
-    public static final Integer MAX_JOBCOUNT = 2;
+    public static final String FAULTY_ITEM_ID   = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
+    public static final String SLOW_ITEM_ID     = "03fef6ac-1896-4ce8-bd69-b798f86c6fac";
+    public static final Integer SLOW_ITEM_SLEEP = 2000;
+    public static final Integer MAX_JOBCOUNT    = 2;
 
     static final Counter requests = Counter.build().name("requests_total").help("Total number of requests.").register();
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
             .help("Request latency in seconds.").register();
 
-    
+    static Unleash unleash = null;
+
+    public Unleash getUnleash() {
+        if (unleash == null) {
+            if(System.getenv("UNLEASH_SERVER_URL") != null) {
+                String podName = System.getenv("POD_NAME");
+                String deployment = System.getenv("DEPLOYMENT_NAME");
+                String image = System.getenv("CONTAINER_IMAGE");
+
+                String keptnProject = System.getenv("KEPTN_PROJECT");
+                String keptnStage = System.getenv("KEPTN_STAGE");
+                String keptnService = System.getenv("KEPTN_SERVICE");
+                
+                UnleashConfig unleashConfig = UnleashConfig.builder()
+                        .appName(keptnService + "." + keptnStage)
+                        .instanceId(podName)
+                        .unleashAPI(System.getenv("UNLEASH_SERVER_URL"))
+                        .subscriber(new UnleashSubscriber() {
+                            @Override
+                            public void onReady(UnleashReady ready) {
+                                System.out.println("Unleash is ready.");
+                            }
+                            @Override
+                            public void togglesFetched(FeatureToggleResponse toggleResponse) {
+                                System.out.println("Fetched toggles. Status: " + toggleResponse.getStatus());
+                            }
+                            @Override
+                            public void togglesBackedUp(ToggleCollection toggleCollection) {
+                                System.out.println("Backup stored.");
+                            }
+                        })
+                        .build();
+                unleash = new DefaultUnleash(unleashConfig);
+            } else {
+                unleash = new FakeUnleash();
+            }
+        }
+        return unleash;
+    }
 
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/{itemId:.*}", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
@@ -93,7 +143,30 @@ public class ItemsController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public List<Item> getItems(@PathVariable String customerId) {
-        return cartsController.get(customerId).contents();
+        if(getUnleash().isEnabled("EnableItemCache")) {
+            // simulate item cache
+            System.out.println("using carts item cache");
+            // return cached items
+            Cart cart = new Cart();
+            cart.customerId = customerId;
+            String id = "5d9e1acc5bd23600071eecea";
+            String itemId = "03fef6ac-1896-4ce8-bd69-b798f85c6e0b";
+            cart.add(new Item(id, itemId, 5, 99.99f));
+            return cart.contents();
+          } else {
+            System.out.println("not using carts item cache");
+            try {
+                // simulate slowdown
+                int millis = Integer.parseInt(this.delayInMillis.trim());
+                Thread.sleep(millis);
+            } catch (Throwable e) {
+                //TODO: handle exception
+            }
+            return cartsController.get(customerId).contents();
+          }
+
+
+        
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -115,6 +188,10 @@ public class ItemsController {
             }
 
             int promRate = Integer.parseInt(promotionRate);
+            // overwrite if promotionrate is set via feature toggle
+            if(getUnleash().isEnabled("EnablePromotion")) {
+                promRate = 30;
+            }
             if (promRate >= (Math.random() * 100)) {
                 throw new Exception("promotion campaign not yet implemented");
             }
@@ -124,19 +201,19 @@ public class ItemsController {
 
             if (!foundItem.hasItem()) {
                 Supplier<Item> newItem = new ItemResource(itemDAO, () -> item).create();
-                LOG.debug("Did not find item. Creating item for user: " + customerId + ", " + newItem.get());
+                System.out.println("Did not find item. Creating item for user: " + customerId + ", " + newItem.get());
                 new CartResource(cartDAO, customerId).contents().get().add(newItem).run();
                 return item;
             } else {
                 Item newItem = new Item(foundItem.get(), foundItem.get().quantity() + 1);
-                System.out.println("found item id: " + newItem.getItemId());
+                //System.out.println("found item id: " + newItem.getItemId());
                 if (newItem.getItemId().equals(FAULTY_ITEM_ID)) {
                     System.out.println("special item found - do some calculation to increase CPU load");
                     int jobCount = 0;
                     while (jobCount < MAX_JOBCOUNT) {
                         long count = 0;
                         long max = 0;
-                        for (long i = 3; i <= 10000; i++) {
+                        for (long i = 3; i <= 20000; i++) {
                             boolean isPrime = true;
                             for (long j = 2; j <= i / 2 && isPrime; j++) {
                                 isPrime = i % j > 0;
@@ -149,9 +226,15 @@ public class ItemsController {
                         }
                         jobCount++;
                     }
-
                 }
-                LOG.debug("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
+                else if (newItem.getItemId().equals(SLOW_ITEM_ID)) {
+                    try {
+                        Thread.sleep(SLOW_ITEM_SLEEP);
+                    } catch (Throwable e) {
+                        // don't do anything
+                    }
+                }
+                System.out.println("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
                 updateItem(customerId, newItem);
                 return newItem;
             }
@@ -168,10 +251,10 @@ public class ItemsController {
         FoundItem foundItem = new FoundItem(() -> getItems(customerId), () -> new Item(itemId));
         Item item = foundItem.get();
 
-        LOG.debug("Removing item from cart: " + item);
+        System.out.println("Removing item from cart: " + item);
         new CartResource(cartDAO, customerId).contents().get().delete(() -> item).run();
 
-        LOG.debug("Removing item from repository: " + item);
+        System.out.println("Removing item from repository: " + item);
         new ItemResource(itemDAO, () -> item).destroy().run();
     }
 
@@ -180,7 +263,7 @@ public class ItemsController {
     public void updateItem(@PathVariable String customerId, @RequestBody Item item) {
         // Merge old and new items
         ItemResource itemResource = new ItemResource(itemDAO, () -> get(customerId, item.itemId()));
-        LOG.debug("Merging item in cart for user: " + customerId + ", " + item);
+        System.out.println("Merging item in cart for user: " + customerId + ", " + item);
         itemResource.merge(item).run();
     }
 
