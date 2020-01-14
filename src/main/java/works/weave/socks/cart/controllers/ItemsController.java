@@ -94,8 +94,8 @@ public class ItemsController {
         // since recent requests are at the end of the array, search the array
         // from back to front
         for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
-            System.out.println(" ---RequestTimestamp: " + requestsArray.get(i));
-            if (requestsArray.get(i) >= aMinuteAgo) {
+            System.out.println(" ---RequestTimestamp: " + this.requestsArray.get(i));
+            if (this.requestsArray.get(i) >= aMinuteAgo) {
                 ++cnt;
             } else {
                 break;
