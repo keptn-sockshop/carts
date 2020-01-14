@@ -3,8 +3,11 @@ package works.weave.socks.cart.controllers;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.lang.Math;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +63,10 @@ public class ItemsController {
     private String promotionRate;
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
+
+    private List<Long> requestsArray = new ArrayList<Long>();
+    private int requestTrimThreshold = 5000;
+    private int requestTrimSize = 4000;
 
     public static final String FAULTY_ITEM_ID   = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
     public static final String SLOW_ITEM_ID     = "03fef6ac-1896-4ce8-bd69-b798f86c6fac";
@@ -128,6 +135,23 @@ public class ItemsController {
         this.delayInMillis = newDelay;
     }
 
+    private int getRequestsPerMinute() {
+        long now = System.currentTimeMillis();
+        long aMinuteAgo = now - (1000 * 60);
+
+        int cnt = 0;
+        // since recent requests are at the end of the array, search the array
+        // from back to front
+        for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
+            if (this.requestsArray.get(i) >= aMinuteAgo) {
+                ++cnt;
+            } else {
+                break;
+            }
+        }
+        return cnt;
+    }
+
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/promotion/{promotion_rate}", method = RequestMethod.GET)
     public void setPromotionRate(@PathVariable("promotion_rate") Optional<String> promotionRate) {
@@ -179,6 +203,17 @@ public class ItemsController {
             requestTimer = requestLatency.startTimer();
         }
 
+        long now = System.currentTimeMillis();
+
+        this.requestsArray.add(now);
+
+        System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
+
+        // now keep requests array from growing forever
+        if (this.requestsArray.size() > this.requestTrimThreshold) {
+            this.requestsArray = this.requestsArray.subList(0, requestsArray.size() - this.requestTrimSize);
+        }
+
         try {
             try {
                 int millis = Integer.parseInt(this.delayInMillis.trim());
@@ -209,23 +244,24 @@ public class ItemsController {
                 //System.out.println("found item id: " + newItem.getItemId());
                 if (newItem.getItemId().equals(FAULTY_ITEM_ID)) {
                     System.out.println("special item found - do some calculation to increase CPU load");
-                    int jobCount = 0;
-                    while (jobCount < MAX_JOBCOUNT) {
-                        long count = 0;
-                        long max = 0;
-                        for (long i = 3; i <= 20000; i++) {
-                            boolean isPrime = true;
-                            for (long j = 2; j <= i / 2 && isPrime; j++) {
-                                isPrime = i % j > 0;
-                            }
-                            if (isPrime) {
-                                count++;
-                                max = i;
-                                System.out.println("prime: " + i);
-                            }
-                        }
-                        jobCount++;
+
+                    /////////////
+                    int reqPerMin = getRequestsPerMinute();
+                    double sleepTime = 1200.0;
+
+                    if (reqPerMin <= 70) {
+                        sleepTime = Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100;
                     }
+
+                    if (reqPerMin <= 50) {
+                        sleepTime = (Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100) / 2;
+                    }
+
+                    System.out.println("Sleeping for " + sleepTime + "ms");
+                    Thread.sleep(Math.round(sleepTime));
+
+                    /////////////
+
                 }
                 else if (newItem.getItemId().equals(SLOW_ITEM_ID)) {
                     try {
