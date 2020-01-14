@@ -88,10 +88,13 @@ public class ItemsController {
         Calendar calendar = Calendar.getInstance();
         int now = calendar.get(Calendar.MILLISECOND);
         int aMinuteAgo = now - (1000 * 60);
+
+        System.out.println("Getting requests between " + aMinuteAgo + " and " + now);
         int cnt = 0;
         // since recent requests are at the end of the array, search the array
         // from back to front
         for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
+            System.out.println(" ---RequestTimestamp: " + requestsArray.get(i));
             if (requestsArray.get(i) >= aMinuteAgo) {
                 ++cnt;
             } else {
