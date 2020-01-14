@@ -3,6 +3,8 @@ package works.weave.socks.cart.controllers;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -31,6 +33,7 @@ import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 
+
 @RestController
 @RequestMapping(value = "/carts/{customerId:.*}/items")
 @EnablePrometheusEndpoint
@@ -51,6 +54,10 @@ public class ItemsController {
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
 
+    private ArrayList<Integer> requestsArray = new ArrayList<String>();
+    private int requestTrimThreshold = 5000;
+    private int requestTrimSize = 4000;
+
     public static final String FAULTY_ITEM_ID = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
     public static final Integer MAX_JOBCOUNT = 2;
 
@@ -58,7 +65,6 @@ public class ItemsController {
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
             .help("Request latency in seconds.").register();
 
-    
 
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/{itemId:.*}", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
@@ -76,6 +82,23 @@ public class ItemsController {
         }
 
         this.delayInMillis = newDelay;
+    }
+
+    private int getRequestsPerMinute() {
+        Calendar calendar = Calendar.getInstance();
+        int now = calendar.get(Calendar.MILLISECOND);
+        int aMinuteAgo = now - (1000 * 60);
+        int cnt = 0;
+        // since recent requests are at the end of the array, search the array
+        // from back to front
+        for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
+            if (requestsArray[i] >= aMinuteAgo) {
+                ++cnt;
+            } else {
+                break;
+            }
+        }
+        return cnt;
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -104,6 +127,18 @@ public class ItemsController {
         if (prometheusEnabled.equals("true")) {
             requests.inc();
             requestTimer = requestLatency.startTimer();
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        int now = calendar.get(Calendar.MILLISECOND);
+
+        this.requestsArrayrequestsArray.add(now);
+
+        System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
+
+        // now keep requests array from growing forever
+        if (this.requestsArray.size() > this.requestTrimThreshold) {
+            this.requestsArray = this.requestsArray.subList(0, requests.size() - this.requestTrimSize);
         }
 
         try {
