@@ -138,7 +138,7 @@ public class ItemsController {
 
         // now keep requests array from growing forever
         if (this.requestsArray.size() > this.requestTrimThreshold) {
-            this.requestsArray = this.requestsArray.subList(0, requests.size() - this.requestTrimSize);
+            this.requestsArray = this.requestsArray.subList(0, requestsArray.size() - this.requestTrimSize);
         }
 
         try {
