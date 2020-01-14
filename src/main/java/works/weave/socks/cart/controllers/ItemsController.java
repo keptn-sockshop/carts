@@ -54,7 +54,7 @@ public class ItemsController {
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
 
-    private ArrayList<Integer> requestsArray = new ArrayList<String>();
+    private List<Integer> requestsArray = new ArrayList<String>();
     private int requestTrimThreshold = 5000;
     private int requestTrimSize = 4000;
 
