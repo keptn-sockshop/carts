@@ -185,23 +185,6 @@ public class ItemsController {
 
                     /////////////
 
-                    int jobCount = 0;
-                    while (jobCount < MAX_JOBCOUNT) {
-                        long count = 0;
-                        long max = 0;
-                        for (long i = 3; i <= 23000; i++) {
-                            boolean isPrime = true;
-                            for (long j = 2; j <= i / 2 && isPrime; j++) {
-                                isPrime = i % j > 0;
-                            }
-                            if (isPrime) {
-                                count++;
-                                max = i;
-                            }
-                        }
-                        jobCount++;
-                    }
-
                 }
                 LOG.debug("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
                 updateItem(customerId, newItem);
