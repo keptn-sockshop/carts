@@ -54,7 +54,7 @@ public class ItemsController {
     @Value("${endpoints.prometheus.enabled}")
     private String prometheusEnabled;
 
-    private List<Integer> requestsArray = new ArrayList<Integer>();
+    private List<Long> requestsArray = new ArrayList<Long>();
     private int requestTrimThreshold = 5000;
     private int requestTrimSize = 4000;
 
@@ -85,9 +85,8 @@ public class ItemsController {
     }
 
     private int getRequestsPerMinute() {
-        Calendar calendar = Calendar.getInstance();
-        int now = calendar.get(Calendar.MILLISECOND);
-        int aMinuteAgo = now - (1000 * 60);
+        long now = System.currentTimeMillis();
+        long aMinuteAgo = now - (1000 * 60);
 
         System.out.println("Getting requests between " + aMinuteAgo + " and " + now);
         int cnt = 0;
@@ -132,8 +131,7 @@ public class ItemsController {
             requestTimer = requestLatency.startTimer();
         }
 
-        Calendar calendar = Calendar.getInstance();
-        int now = calendar.get(Calendar.MILLISECOND);
+        long now = System.currentTimeMillis();
 
         this.requestsArray.add(now);
 
