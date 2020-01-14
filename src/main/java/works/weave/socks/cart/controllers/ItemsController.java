@@ -179,7 +179,6 @@ public class ItemsController {
                             if (isPrime) {
                                 count++;
                                 max = i;
-                                System.out.println("prime: " + i);
                             }
                         }
                         jobCount++;
