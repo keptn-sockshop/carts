@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.lang.Math;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,12 +89,10 @@ public class ItemsController {
         long now = System.currentTimeMillis();
         long aMinuteAgo = now - (1000 * 60);
 
-        System.out.println("Getting requests between " + aMinuteAgo + " and " + now);
         int cnt = 0;
         // since recent requests are at the end of the array, search the array
         // from back to front
         for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
-            System.out.println(" ---RequestTimestamp: " + this.requestsArray.get(i));
             if (this.requestsArray.get(i) >= aMinuteAgo) {
                 ++cnt;
             } else {
@@ -168,6 +167,24 @@ public class ItemsController {
                 System.out.println("found item id: " + newItem.getItemId());
                 if (newItem.getItemId().equals(FAULTY_ITEM_ID)) {
                     System.out.println("special item found - do some calculation to increase CPU load");
+
+                    /////////////
+                    int reqPerMin = getRequestsPerMinute();
+                    int sleepTime = 1200;
+
+                    if (reqPerMin <= 70) {
+                        sleepTime = Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100;
+                    }
+
+                    if (reqPerMin <= 50) {
+                        sleepTime = (Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100) / 2;
+                    }
+
+                    System.out.println("Sleeping for " + sleepTime + "ms");
+                    Thread.sleep(sleepTime);
+
+                    /////////////
+
                     int jobCount = 0;
                     while (jobCount < MAX_JOBCOUNT) {
                         long count = 0;
