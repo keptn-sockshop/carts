@@ -170,7 +170,7 @@ public class ItemsController {
 
                     /////////////
                     int reqPerMin = getRequestsPerMinute();
-                    int sleepTime = 1200;
+                    double sleepTime = 1200.0;
 
                     if (reqPerMin <= 70) {
                         sleepTime = Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100;
@@ -181,7 +181,7 @@ public class ItemsController {
                     }
 
                     System.out.println("Sleeping for " + sleepTime + "ms");
-                    Thread.sleep(sleepTime);
+                    Thread.sleep(Math.round(sleepTime));
 
                     /////////////
 
