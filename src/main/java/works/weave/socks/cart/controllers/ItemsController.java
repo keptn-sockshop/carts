@@ -132,7 +132,7 @@ public class ItemsController {
         Calendar calendar = Calendar.getInstance();
         int now = calendar.get(Calendar.MILLISECOND);
 
-        this.requestsArrayrequestsArray.add(now);
+        this.requestsArray.add(now);
 
         System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
 
