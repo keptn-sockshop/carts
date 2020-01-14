@@ -176,7 +176,7 @@ public class ItemsController {
                         sleepTime = Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100;
                     }
 
-                    if (reqPerMin <= 45) {
+                    if (reqPerMin <= 50) {
                         sleepTime = (Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100) / 2;
                     }
 
