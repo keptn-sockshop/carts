@@ -25,7 +25,7 @@ public class RequestCounterInterceptor implements HandlerInterceptor {
 
     private static final Histogram responseTimeInMs = Histogram
             .build()
-			      .exponentialBuckets(1.0, 2.0, 15)
+			      .exponentialBuckets(1.0, 1.5, 20)
             .name("http_response_time_milliseconds")
             .labelNames("method", "handler", "status")
             .help("Request completed time in milliseconds")
