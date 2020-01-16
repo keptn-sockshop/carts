@@ -142,6 +142,9 @@ public class ItemsController {
         int cnt = 0;
         // since recent requests are at the end of the array, search the array
         // from back to front
+        if (this.requestsArray.size() <= 0) {
+            return 0;
+        }
         for (int i = this.requestsArray.size() - 1; i >= 0; i--) {
             if (this.requestsArray.get(i) >= aMinuteAgo) {
                 ++cnt;
@@ -207,7 +210,11 @@ public class ItemsController {
 
         this.requestsArray.add(now);
 
-        System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
+        try {
+            System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
+        } catch (Throwable e) {
+
+        }
 
         // now keep requests array from growing forever
         if (this.requestsArray.size() > this.requestTrimThreshold) {
