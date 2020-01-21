@@ -33,32 +33,14 @@ jobs:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}"
 
-  - stage: develop
-    if: branch = develop AND NOT type = pull_request
-    script:
-    - echo $TRAVIS_BUILD_STAGE_NAME
-    - ./build_multiple_versions.sh
-    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${DATE}.1"
-    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${DATE}.2"
-    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${DATE}.3"
-    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:latest.1"
-    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:latest.2"
-    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:latest.3"
-    after_success:
-    - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
-    - docker push "${IMAGE}"
-
   - stage: release-branch
     if: branch =~ ^release.*$ AND NOT type = pull_request
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
-    - ./build_multiple_versions.sh
-    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.${DATE}.1"
-    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.${DATE}.2"
-    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.${DATE}.3"
-    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.latest.1"
-    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.latest.2"
-    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.latest.3"
+    - ./build_multiple_versions.sh    
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}"
@@ -68,9 +50,12 @@ jobs:
     script:
     - echo $TRAVIS_BUILD_STAGE_NAME
     - ./build_multiple_versions.sh
-    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.1"
-    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.2"
-    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.${DATE}.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.${DATE}.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.${DATE}.3"
+    - docker tag "${IMAGE}:${GIT_SHA}.1" "${IMAGE}:${VERSION}.latest.1"
+    - docker tag "${IMAGE}:${GIT_SHA}.2" "${IMAGE}:${VERSION}.latest.2"
+    - docker tag "${IMAGE}:${GIT_SHA}.3" "${IMAGE}:${VERSION}.latest.3"
     after_success:
     - echo "$REGISTRY_PASSWORD" | docker login --username $REGISTRY_USER --password-stdin
     - docker push "${IMAGE}"
