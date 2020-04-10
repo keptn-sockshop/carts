@@ -172,7 +172,7 @@ public class ItemsController {
     public List<Item> getItems(@PathVariable String customerId) {
         if(getUnleash().isEnabled("EnableItemCache")) {
             // simulate item cache
-            System.out.println("using carts item cache");
+            System.out.println("Using carts item cache");
             // return cached items
             Cart cart = new Cart();
             cart.customerId = customerId;
@@ -181,19 +181,21 @@ public class ItemsController {
             cart.add(new Item(id, itemId, 5, 99.99f));
             return cart.contents();
           } else {
-            System.out.println("not using carts item cache");
+            System.out.println("Not using carts item cache");
+            /*
+            // Remove this sleep because this use-case is currently not demoable
+
             try {
                 // simulate slowdown
                 int millis = Integer.parseInt(this.delayInMillis.trim());
+                System.out.println("Sleep for: " + millis + "ms in getItems");
                 Thread.sleep(millis);
             } catch (Throwable e) {
                 //TODO: handle exception
             }
+            */
             return cartsController.get(customerId).contents();
           }
-
-
-        
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -207,13 +209,12 @@ public class ItemsController {
         }
 
         long now = System.currentTimeMillis();
-
         this.requestsArray.add(now);
 
         try {
             System.out.println("Number of requests per minute: " + this.getRequestsPerMinute());
         } catch (Throwable e) {
-
+            // don't do anything
         }
 
         // now keep requests array from growing forever
@@ -224,18 +225,21 @@ public class ItemsController {
         try {
             try {
                 int millis = Integer.parseInt(this.delayInMillis.trim());
+                System.out.println("Sleep for: " + millis + "ms in addToCart");
                 Thread.sleep(millis);
             } catch (Throwable e) {
                 // don't do anything
             }
-
+            
             int promRate = Integer.parseInt(promotionRate);
-            // overwrite if promotionrate is set via feature toggle
+
+            // overwrite if promotion rate is set via feature toggle
             if(getUnleash().isEnabled("EnablePromotion")) {
                 promRate = 30;
             }
+
             if (promRate >= (Math.random() * 100)) {
-                throw new Exception("promotion campaign not yet implemented");
+                throw new Exception("Promotion campaign not yet implemented");
             }
 
             // If the item does not exist in the cart, create new one in the repository.
@@ -264,7 +268,7 @@ public class ItemsController {
                         sleepTime = (Math.pow(reqPerMin, 2) - Math.pow(reqPerMin, 3) / 100) / 2;
                     }
 
-                    System.out.println("Sleeping for " + sleepTime + "ms");
+                    System.out.println("Sleep for " + Math.round(sleepTime) + "ms (faulty item) in addToCart");
                     Thread.sleep(Math.round(sleepTime));
 
                     /////////////
@@ -272,6 +276,7 @@ public class ItemsController {
                 }
                 else if (newItem.getItemId().equals(SLOW_ITEM_ID)) {
                     try {
+                        System.out.println("Sleep for" + SLOW_ITEM_SLEEP + "ms (slow item) in addToCart");
                         Thread.sleep(SLOW_ITEM_SLEEP);
                     } catch (Throwable e) {
                         // don't do anything
