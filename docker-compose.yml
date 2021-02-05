@@ -1,0 +1,25 @@
+version: '3'
+volumes:
+  db_files:
+services:
+  # carts microservice
+  carts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      POD_NAME: "carts-docker-compose"
+      DEPLOYMENT_NAME: "carts-docker-compose"
+      CONTAINER_IMAGE: "carts"
+    depends_on:
+      - carts-db
+    ports:
+      - "8080:8080"
+
+  # database
+  carts-db:
+    image: mongo
+    volumes:
+      - db_files:/data/db
+    ports:
+      - "27017:27017"
