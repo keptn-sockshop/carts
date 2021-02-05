@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -31,6 +32,12 @@ public class RequestCounterInterceptor implements HandlerInterceptor {
             .help("Request completed time in milliseconds")
             .register();
 
+    public static final Gauge responseTimeInMsGauge = Gauge.build()
+			.name("http_response_time_milliseconds_gauge")
+			.labelNames("method", "handler", "status")
+			.help("Request completed time in milliseconds")
+			.register();
+
 	@Override
 	public boolean preHandle(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final Object o) throws Exception {
         httpServletRequest.setAttribute(REQ_PARAM_TIMING, System.currentTimeMillis());
@@ -54,5 +61,13 @@ public class RequestCounterInterceptor implements HandlerInterceptor {
         long completedTime = System.currentTimeMillis() - timingAttr;
         responseTimeInMs.labels(request.getMethod(), handlerLabel, Integer.toString(response.getStatus())).observe(
                 completedTime);
+
+
+        // calculate average response time by getting the sum of observations and diding through the number of total requests
+        double responseTimeAvg =
+				responseTimeInMs.labels(request.getMethod(), handlerLabel, Integer.toString(response.getStatus())).get().sum /
+						requestTotal.labels(request.getMethod(), handlerLabel, Integer.toString(response.getStatus())).get();
+
+		responseTimeInMsGauge.labels(request.getMethod(), handlerLabel, Integer.toString(response.getStatus())).set(responseTimeAvg);
 	}
 }
