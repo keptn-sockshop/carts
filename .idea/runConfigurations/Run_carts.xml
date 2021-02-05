@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run carts" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="carts" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="works.weave.socks.cart.CartApplication" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
