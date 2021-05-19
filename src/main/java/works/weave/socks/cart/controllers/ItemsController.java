@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.lang.Math;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +71,11 @@ public class ItemsController {
 
     public static final String FAULTY_ITEM_ID   = "03fef6ac-1896-4ce8-bd69-b798f85c6e0f";
     public static final String SLOW_ITEM_ID     = "03fef6ac-1896-4ce8-bd69-b798f86c6fac";
+    public static final String JVM_EXHAUSTION_ITEM_ID     = "03fef6ac-1896-4ce8-bd69-b798f864711";
     public static final Integer SLOW_ITEM_SLEEP = 2000;
     public static final Integer MAX_JOBCOUNT    = 2;
+
+    public static final ArrayList<Double> listRandomNumbers = new ArrayList<Double>(100000000);
 
     static final Counter requests = Counter.build().name("requests_total").help("Total number of requests.").register();
     static final Histogram requestLatency = Histogram.build().name("requests_latency_seconds")
@@ -280,6 +284,12 @@ public class ItemsController {
                         Thread.sleep(SLOW_ITEM_SLEEP);
                     } catch (Throwable e) {
                         // don't do anything
+                    }
+                }
+                else if (newItem.getItemId().equals(JVM_EXHAUSTION_ITEM_ID)) {
+                    Random random = new Random();
+                    for (int i = 0; i < 100000000; i++) {
+                        listRandomNumbers.add(random.nextDouble());
                     }
                 }
                 System.out.println("Found item in cart. Incrementing for user: " + customerId + ", " + newItem);
